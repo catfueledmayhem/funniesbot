@@ -550,7 +550,6 @@ async def thing35(interaction: discord.Interaction, text: str):
         elif thefunnylines:
             thefunnylines.append(thefunnies)
     fullness = "\n".join(thefunnylines) or result.stdout or "whois data does not exist for some reason???"
-    fullness = [thefunnies for thefunnies in thefunnylines if not thefunnies.startswith("%")]
     await interaction.response.send_message(fullness[:2000])
 
 
