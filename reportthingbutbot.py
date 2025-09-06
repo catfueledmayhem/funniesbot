@@ -36,11 +36,6 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS money (
     username TEXT PRIMARY KEY,
     money INTEGER
 )''')
-cursor.execute('''CREATE TABLE IF NOT EXISTS variables (
-    guild_id INTEGER PRIMARY KEY,
-    variablename TEXT,
-    variablecontent TEXT
-)''')
 db.commit()
 load_dotenv(dotenv_path="./catapi.env")
 class theclientfunction(discord.Client):
@@ -668,7 +663,7 @@ async def transfer(interaction: discord.Interaction, username: str, transferamou
         new_money = current_money[0] - transferamount
         cursor.execute("UPDATE money SET money = ? WHERE username = ?", (new_money, interaction.user.name))
         cursor.execute("UPDATE money SET money = ? WHERE username = ?", (newotherguysmoney, username))
-        await interaction.response.send_message("you sent " + transferamount + f" and now have {new_money} funnies.")
+        await interaction.response.send_message("you sent " + str(transferamount) + f" and now have {new_money} funnies.")
     db.commit()
 
 
