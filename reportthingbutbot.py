@@ -253,8 +253,8 @@ async def conf(interaction: discord.Interaction, channelid: str):
     userid = await interaction.guild.fetch_member(interaction.user.id)
     if not any(role.name == "Admin" for role in userid.roles):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
-            with open("watchdog.log", "w") as watchdog:
-                watchdog.write(datetime.now().strftime("\n[%Y-%m-%d %H:%M:%S] ") + f"failed config! {interaction.user.name} tried to config the moderator channel to be {channelid} in guild {interaction.guild.name} (no perms)")
+        with open("watchdog.log", "w") as watchdog:
+            watchdog.write(datetime.now().strftime("\n[%Y-%m-%d %H:%M:%S] ") + f"failed config! {interaction.user.name} tried to config the moderator channel to be {channelid} in guild {interaction.guild.name} (no perms)")
         return
     cursor.execute("REPLACE INTO config (guild_id, moderator_channel_id) VALUES (?, ?)", (interaction.guild.id, channelid))
     with open("watchdog.log", "w") as watchdog:
@@ -646,7 +646,7 @@ async def giveone(interaction: discord.Interaction, money: int, uname: str):
 @client.tree.command(name="transfer", description="TRANSFER")
 @app_commands.describe(username="username of who you want to transfer to")
 @app_commands.describe(transferamount="amount to transfer")
-async def transfer(interaction: discord.Interaction, username: str):
+async def transfer(interaction: discord.Interaction, username: str, transferamount: int):
     global new_money
     cursor.execute("SELECT money FROM money WHERE username = ?", (interaction.user.name,))
     current_money = cursor.fetchone()
@@ -655,13 +655,20 @@ async def transfer(interaction: discord.Interaction, username: str):
     otherguysmoney = cursor.fetchone()
     if not otherguysmoney:
         await interaction.response.send_message("the person you're trying to transfer to doesn't have a wallet.")
-    elif current_money:
+        return
+    if not current_money:
+        await interaction.response.send_message("you dont have a wallet. create one with /w-rk")
+        return
+    if current_money[0] < transferamount:
+        await interaction.response.send_message("you dont have enough money.")
+        return
+    newotherguysmoney = otherguysmoney[0] + transferamount
+
+    if current_money:
         new_money = current_money[0] - transferamount
         cursor.execute("UPDATE money SET money = ? WHERE username = ?", (new_money, interaction.user.name))
-        cursor.execute("UPDATE money SET money = ? WHERE username = ?", (otherguysmoney += transferamount, username))
+        cursor.execute("UPDATE money SET money = ? WHERE username = ?", (newotherguysmoney, username))
         await interaction.response.send_message("you sent " + transferamount + f" and now have {new_money} funnies.")
-    else:
-        await interaction.response.send_message("you dont have a wallet. create one with /w-rk")
     db.commit()
 
 
